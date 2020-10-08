@@ -16,16 +16,6 @@ public class Member {
     public String getMemberNumber(){
         return memberNumber;
     }
-    //these methods were made in order to allow the rent/relinquish methods from Library to edit the corresponding Member's renting/rented list.
-    public void updateMemberRentingHistory(Book book){
-        this.rentingNow.add(book);
-    }
-    public void removeMemberRentingHistory(Book book){
-        this.rentingNow.remove(book);
-    }
-    public void updateMemberRentedHistory(Book book){
-        this.rentedHistory.add(book);
-    }
 
     //member's rent/relinquish uses Book's rent/relinquish logic
     public boolean rent(Book book){
@@ -34,6 +24,7 @@ public class Member {
         }
         else{
             book.rent(this);
+            this.rentingNow.add(book);
             //required to take from Library
             return true;
         }
@@ -44,6 +35,8 @@ public class Member {
         }
         else{
             book.relinquish(this);
+            this.rentedHistory.add(book);
+            this.rentingNow.remove(book);
             //required to return to Library
             return true;
         }
@@ -67,7 +60,8 @@ public class Member {
         else{
             //note: figure out how to only keep 1 copy of a book with the same
             List<Book> intersection = new ArrayList<>();
-            List<Book> reference = members[0].history(); //since we are looking for the intersection between lists, all other list must contain some elements of this reference.
+            //since we are looking for the intersection between lists, all other list must contain some/all elements of this reference.
+            List<Book> reference = members[0].history(); 
             //loop through reference list
             for (int i = 0; i < reference.size(); i++){
                 //start at 1 since reference is at 0
@@ -82,7 +76,7 @@ public class Member {
                 }
             }
         
-            //comparator that compares Book objects based off their serial numbers using a Book method reference
+            //Comparator that compares Book objects based off their serial numbers using a Book method reference
             Comparator<Book> bySerialNumber = Comparator.comparing(Book::getSerialNumber);
             Collections.sort(intersection, bySerialNumber);
             return intersection;
