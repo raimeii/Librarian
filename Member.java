@@ -66,19 +66,37 @@ public class Member {
             for (int i = 0; i < reference.size(); i++){
                 //start at 1 since reference is at 0
                 int hits = 0;
-                for (int j = 1; j < members.length; j++){
-                    if (members[j].history().contains(reference.get(i))){
+                Book currBook = reference.get(i);
+                for (int j = 0; j < members.length; j++){
+                    if (members[j].history().contains(currBook)){
                         hits++;
                     }
                 }
-                if (hits == members.length - 1){
-                    intersection.add(reference.get(i));
+                if (hits == members.length){
+                    intersection.add(currBook);
                 }
             }
         
             //Comparator that compares Book objects based off their serial numbers using a Book method reference
             Comparator<Book> bySerialNumber = Comparator.comparing(Book::getSerialNumber);
             Collections.sort(intersection, bySerialNumber);
+            
+            //removing multiple occurrences of a book with the same serial number
+            for (int k = 0; k < intersection.size(); k++){
+                int occur = 0;
+                Book target = intersection.get(k);
+                for (int t = 0; t< intersection.size(); t++){
+                    if (target.getSerialNumber().equals(intersection.get(t).getSerialNumber())){
+                        occur++;
+                    }
+                }
+                if (occur > 1){
+                    while (occur > 1){
+                        intersection.remove(target);
+                        occur -= 1;
+                    }
+                }
+            }
             return intersection;
         }
     }
