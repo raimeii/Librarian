@@ -105,6 +105,7 @@ public class Member {
         //add to rented history, remove from currently renting
         for (int t = 0; t < rentingNow.size(); t++){
             rentedHistory.add(rentingNow.get(t));
+            this.relinquish(rentingNow.get(t));
             rentingNow.remove(t);
         }
         //return to library

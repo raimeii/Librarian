@@ -134,14 +134,20 @@ public class Book {
 
             }
             if (!coll.containsKey(serialNumber)){
+                System.out.println("No such book in file.");
+                System.out.println();
+                scan.close();
                 return null;
             }
             else{
+                scan.close();
                 return coll.get(serialNumber);
             }
 
         }
         catch (FileNotFoundException e){
+            System.out.println("No such file.");
+            System.out.println();
             return null;
         }
     }
@@ -236,13 +242,12 @@ public class Book {
         hal.rent(ts);
         hal.relinquish(ts);
         mike.rent(ts);
-        mike.relinquish(ts);
         //for (int i =0; i < hp.renterHistory().size(); i++){
             //System.out.println(hp.renterHistory().get(i).getName());
         //}
-        System.out.println(mike.history().toString());
+        System.out.println(mike.renting().get(0).getTitle());
         //System.out.println(mike.renting().toString());
-        System.out.println(hal.history().toString());
+        System.out.println(hal.renting().toString());
         //System.out.println(hal.renting().toString());
         //System.out.println(hp.renterHistory().toString());
         Member[] members = new Member[]{hal,mike};
