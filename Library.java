@@ -7,6 +7,7 @@ public class Library {
     //Comparator as a class variable common to all objects (specifically the static methods)
     //Comparator that compares Book objects based off their serial numbers using a Book method reference
     private static Comparator<Book> bySerialNumber = Comparator.comparing(Book::getSerialNumber);
+    private static Comparator<Book> byLexicographical = Comparator.comparing(Book::shortString);    
 
     public void addBook(String bookFile, String serialNumber){
         if (bookFile == null){
@@ -17,13 +18,14 @@ public class Library {
         if (books.containsKey(serialNumber)){
             System.out.println("Book already exists in system.");
             System.out.println();
+            return;
         }
         Book newBook = Book.readBook(bookFile, serialNumber);
         if (newBook == null){
             return;
         }
         else{
-            books.put(newBook.getGenre(), newBook);
+            books.put(newBook.getSerialNumber(), newBook);
             System.out.println("Successfully added " + newBook.shortString());
             System.out.println();
         }
@@ -36,12 +38,21 @@ public class Library {
         System.out.println("Success.");
         System.out.println();
     }
-    //method for testing
-    public Map<String, Member> returnmem(){
-        return this.members;
-    }
-    public Map<String, Book> returnbook(){
-        return this.books;
+    public void getMember(String memberNumber){
+        if (members.size() == 0){
+            System.out.println("No members in system.");
+            System.out.println();
+            return;
+        }
+        if (!members.containsKey(memberNumber)){
+            System.out.println("No such member in system.");
+            System.out.println();
+            return;
+        }
+        else{
+            System.out.println(members.get(memberNumber).getMemberNumber() + ": " + members.get(memberNumber).getName());
+            System.out.println();
+        } 
     }
     public void rentBook(String memberNumber, String serialNumber){
         if (members.size() == 0){
@@ -133,18 +144,19 @@ public class Library {
         }
     }
     public void getMemberBooks(String memberNumber){
-        Member target = members.get(memberNumber);
         if (members.size() == 0){
             System.out.println("No members in system.");
             System.out.println();
             return;
         }
         else if (!members.containsKey(memberNumber)){
+            System.out.println("Something's wrong...");
             System.out.println("No such member in system.");
             System.out.println();
             return;
         }
         else{
+            Member target = members.get(memberNumber);
             List<Book> renting = target.renting();
             if (renting.size() == 0){
                 System.out.println("Member not currently renting.");
@@ -159,6 +171,38 @@ public class Library {
                     }
                     else{
                         System.out.println(renting.get(x).shortString());
+                    }
+                }
+            }
+        }
+    }
+    public void memberRentalHistory(String memberNumber){
+        if (members.size() == 0){
+            System.out.println("No members in system.");
+            System.out.println();
+            return;
+        }
+        else if (!members.containsKey(memberNumber)){
+            System.out.println("No such member in system.");
+            System.out.println();
+            return;
+        }
+        else{
+            Member target = members.get(memberNumber);
+            List<Book> history = target.history();
+            if (history.size() == 0){
+                System.out.println("No rental history for member.");
+                System.out.println();
+                return;
+            }
+            else{
+                for (int x = 0; x < history.size(); x++){
+                    if (x == history.size() - 1){
+                        System.out.println(history.get(x).shortString());
+                        System.out.println();
+                    }
+                    else{
+                        System.out.println(history.get(x).shortString());
                     }
                 }
             }
@@ -215,7 +259,77 @@ public class Library {
         }
         System.out.println();
     }
+    public void getBook(String serialNumber, boolean fullString){
+        if (books.size() == 0){
+            System.out.println("No books in system.");
+            System.out.println();
+            return;
+        }
+        if (!books.containsKey(serialNumber)){
+            System.out.println("No such book in system.");
+            System.out.println();
+            return;
+        }
+        if (fullString){
+            System.out.println(books.get(serialNumber).longString());
+            System.out.println();
+        }
+        else if (!fullString){
+            System.out.println(books.get(serialNumber).shortString());
+            System.out.println();
+        }
+    }
     
+    public void getBooksByAuthor(String author){
+        if (books.size() == 0){
+            System.out.println("No books in system.");
+            System.out.println();
+            return;
+        }
+        else{
+            List<Book> bookList = new ArrayList<>();
+            for (Book b : books.values()){
+                bookList.add(b);
+            }
+            List<Book> byAuthor = Book.filterAuthor(bookList, author);
+            if (byAuthor.size() == 0){
+                System.out.println("No books by " + author + ".");
+                System.out.println();
+                return;
+            }
+            else{
+                for (Book b : byAuthor){
+                    System.out.println(b.shortString());
+                }
+            }
+            System.out.println();
+        }
+    }
+    public void getBooksByGenre(String genre){
+        if (books.size() == 0){
+            System.out.println("No books in system.");
+            System.out.println();
+            return;
+        }
+        else{
+            List<Book> bookList = new ArrayList<>();
+            for (Book b : books.values()){
+                bookList.add(b);
+            }
+            List<Book> byGenre = Book.filterGenre(bookList, genre);
+            if (byGenre.size() == 0){
+                System.out.println("No books with genre " + genre + ".");
+                System.out.println();
+                return;
+            }
+            else{
+                for (Book b :byGenre){
+                    System.out.println(b.shortString());
+                }
+            }
+            System.out.println();
+        }
+    }
     public void getAvailableBooks(boolean fullString){
         if (books.size() == 0){
             System.out.println("No books in system.");
@@ -259,11 +373,82 @@ public class Library {
         System.out.println();
 
     }
+    public void getCopies(){
+        if (books.size() == 0){
+            System.out.println("No books in system.");
+            System.out.println();
+            return;
+        }
+        else{
+            List<Book> allBooks = new ArrayList<>();
+            List<Book> seenBooks = new ArrayList<>();
+            List<String> seenShortString = new ArrayList<>();
+            for (Book b : books.values()){
+                allBooks.add(b);
+            }
+            Collections.sort(allBooks, byLexicographical);
+            for (int i = 0; i < allBooks.size(); i++){
+                Book target = allBooks.get(i);
+                int count = 0;
+                //if book and shortString has not been encountered yet, count all occurences of the shortString from different Books in the list.
+                if (!seenBooks.contains(target) && !seenShortString.contains(target.shortString())){
+                    for (int k = 0; k < allBooks.size(); k++){
+                        if (target.shortString().equals(allBooks.get(k).shortString())){
+                            count++;
+                        }
+                    }
+                    //add the book and the shortstring to seen lists
+                    System.out.println(target.shortString() + ": " + count);
+                    seenBooks.add(target);
+                    seenShortString.add(target.shortString());
+                }
+                //for the case of a different Book object with the same shortString, continue, as the above if statement already accounts for different objects with the same shortString
+                else if (!seenBooks.contains(target) && seenShortString.contains(target.shortString())){
+                    continue;
+                }
+            }
+            System.out.println();
+        }
+    }
+    public void getGenres(){
+        if (books.size() == 0){
+            System.out.println("No books in system.");
+            System.out.println();
+            return;
+        }
+        List<String> genres = new ArrayList<>();
+        for (Book b : books.values()){
+            genres.add(b.getGenre());
+        }
+        //remove multiple occurences of author
+        for (int p = 0; p < genres.size(); p++){
+            int occur = 0;
+            String target = genres.get(p);
+            for (int o = 0; o < genres.size(); o++){
+                if (target.equals(genres.get(o))){
+                    occur++;
+                }
+            }
+            if (occur > 1){
+                while (occur > 1){
+                    genres.remove(target);
+                    occur -=1;
+                }
+            }
+        }
+        //sort alphabetically
+        Collections.sort(genres);
+        for (String s : genres){
+            System.out.println(s);
+        }
+        System.out.println();
+    }
 
     public void addCollection(String filename){
         List<Book> collection = Book.readBookCollection(filename);
         if (filename == null || collection == null){
             System.out.println("No such collection.");
+            System.out.println();
             return;
         }
         int contained = 0;
@@ -290,6 +475,22 @@ public class Library {
         }
 
     }
+    public void saveCollection(String filename){
+        if (books.size() == 0){
+            System.out.println("No books in system.");
+            System.out.println();
+            return;
+        }
+        else{
+            Collection<Book> libBooks = new ArrayList<>();
+            for (Book book : books.values()){
+                libBooks.add(book);
+            }
+            Book.saveBookCollection(filename, libBooks);
+            System.out.println("Success.");
+            System.out.println();
+        }
+    }
     public void bookHistory(String serialNumber){
         if (!books.containsKey(serialNumber)){
             System.out.println("No such book in system.");
@@ -300,6 +501,7 @@ public class Library {
         if (target.renterHistory().size() == 0){
             System.out.println("No rental history.");
             System.out.println();
+            return;
         }
         else{
             List<Member> pastRenters = target.renterHistory();
@@ -385,26 +587,116 @@ public class Library {
             }
         }
     }
+    public void run(){
+        Scanner input = new Scanner(System.in);
+        System.out.print("user: ");
+        try{
+            while(input.hasNextLine()){
+                String command = input.nextLine();
+                //no splits (LIST, NUM OF COPIES, LIST GENRES, LIST AUTHORS, END, COMMANDS)
+                if (command.toLowerCase().equals("exit")){
+                    return;
+                }
+                else if (command.toLowerCase().equals("list all long")){
+                    this.getAllBooks(true);
+                }
+                else if (command.toLowerCase().equals("list all short")){
+                    this.getAllBooks(false);
+                }
+                else if (command.toLowerCase().equals("list available long")){
+                    this.getAvailableBooks(true);
+                }
+                else if (command.toLowerCase().equals("list available short")){
+                    this.getAvailableBooks(false);
+                }
+                else if (command.toLowerCase().equals("number copies")){
+                    this.getCopies();
+                }
+                else if (command.toLowerCase().toLowerCase().equals("list genres")){
+                    this.getGenres();
+                }
+                else if (command.toLowerCase().equals("list authors")){
+                    this.getAuthors();
+                }
+                // splits limited by 2 (GENRE, AUTHOR)
+                else if (command.toLowerCase().split(" ", 2)[0].equals("genre")){
+                    this.getBooksByGenre(command.split(" ", 2)[1]);
+                }
+                else if (command.toLowerCase().split(" ", 2)[0].equals("author")){
+                    this.getBooksByAuthor(command.split(" ", 2)[1]);
+                }
+                //splits limited to 3 (BOOK)
+                else if (command.toLowerCase().split(" ", 3)[0].equals("book")){
+                    if (command.toLowerCase().split(" ", 3)[2].equals("long")){
+                        this.getBook(command.split(" ", 3)[1], true);
+                    }
+                    else if (command.toLowerCase().split(" ", 3)[2].equals("short")){
+                        this.getBook(command.split(" ", 3)[1], false);
+                    }
+                }
+                else if (command.toLowerCase().split(" ", 3)[0].equals("book") && command.toLowerCase().split(" ", 3)[1].equals("history")){
+                    // broken
+                    this.bookHistory(command.split(" ", 3)[2]);
+                }
+                //splits limited to 2,3,3 (MEMBER)
+                else if (command.toLowerCase().split(" ", 2)[0].equals("member")){
+                    this.getMember(command.split(" ", 2)[1]);
+                }
+                else if (command.toLowerCase().split(" ", 3)[0].equals("member") && (command.toLowerCase().split(" ", 3)[1].equals("books"))){
+                    //broke
+                    this.getMemberBooks(command.split(" ")[2]);
+                }
+                else if (command.toLowerCase().split(" ", 3)[0].equals("member") && (command.toLowerCase().split(" ", 3)[1].equals("history"))){
+                    //broke
+                    this.memberRentalHistory(command.split(" ", 3)[2]);
+                }
+                //splits of 3 (RENT/RELINQUISH)
+                else if (command.toLowerCase().split(" ", 3)[0].equals("rent")){
+                    this.rentBook(command.split(" ", 3)[1], command.split(" ", 3)[2]);
+                }
+                else if (command.toLowerCase().split(" ", 3)[0].equals("relinquish")){
+                    this.relinquishBook(command.split(" ", 3)[1], command.split(" ", 3)[2]);
+                }
+                else if (command.toLowerCase().split(" ", 3)[0].equals("relinquish") && command.toLowerCase().split(" ", 3)[1].equals("all")){
+                    //broken
+                    this.relinquishAll(command.split(" ", 3)[2]);
+                }
+                //splits of 3,4 (ADD)
+                else if (command.toLowerCase().split(" ", 3)[0].equals("add") && command.toLowerCase().split(" ", 3)[1].equals("member")){
+                    this.addMember(command.split(" ", 3)[2]);
+                }
+                else if (command.toLowerCase().split(" ", 4)[0].equals("add") && command.toLowerCase().split(" ", 4)[1].equals("book")){
+                    this.addBook(command.split(" ", 3)[2], command.split(" ", 3)[3]);
+                }
+                //splits of 3 (COLLECTION)
+                else if (command.toLowerCase().split(" ", 3)[0].equals("add") && command.toLowerCase().split(" ", 3)[1].equals("collection")){
+                    this.addCollection(command.split(" ", 3)[2]);
+                }
+                else if (command.toLowerCase().split(" ", 3)[0].equals("save") && command.toLowerCase().split(" ", 3)[1].equals("collection")){
+                    this.saveCollection(command.split(" ", 3)[2]);
+                }
+
+                System.out.print("user: ");
+            }
+        }
+        catch (Exception e){
+            ;
+        }
+    }
+    
 
 
     public static void main(String[] args){
         Library l = new Library();
-        l.addMember("Hal Mary");
-        l.addMember("Marv Hall");
-        l.addCollection("sample.csv");
-        l.addCollection("sample1.csv");
-        l.rentBook("100000", "111111");
-        l.rentBook("100000", "111112");;
-        l.relinquishAll("100000");
-        l.rentBook("100001", "111111");
-        l.relinquishBook("100001", "111111");
-        l.bookHistory("999999");
-        l.common(new String[]{"100000", "100001"});
-        l.rentBook("100000", "111120");
-        l.addBook("sample1.csv", "111128");
-        l.getAllBooks(false);
-        l.getAvailableBooks(false);
-        //l.getAuthors();
+        // l.addMember("Joe Sullivan");
+        // l.addCollection("sample3.csv");
+        // l.rentBook("100000", "111111");
+        // l.rentBook("100000", "111112");
+        // l.getMemberBooks("100000");
+        // l.relinquishAll("100000");
+        // l.getMemberBooks("100000");
+        // l.getMemberBooks("100500");
+        l.run();
 
         //String[] mem = new String[]{"100004", "100005"};
         //l.common(mem); broken atm

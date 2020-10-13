@@ -10,7 +10,8 @@ public class Book {
     private Member renter;
     private List<Member> renterHistory = new ArrayList<Member>();
     //Comparator as a class variable common to all objects (specifically the static methods)
-    //Comparator that compares Book objects based off their serial numbers using a Book method reference
+    //Comparator that compares Book objects based off their serial numbers using a Book method reference to getSerialNumber
+    //Creates a comparator that uses String.compareTo() to determine if one string is greater than or less than another string lexicographically, in this case, the serial numbers
     private static Comparator<Book> bySerialNumber = Comparator.comparing(Book::getSerialNumber);
 
     public Book(String title, String author, String genre, String serialNumber){
@@ -124,6 +125,9 @@ public class Book {
             Map<String, Book> coll = new HashMap<>();
             while (scan.hasNextLine()){
                 String[] currentLineArray = scan.nextLine().split(",");
+                //if (currentLineArray.length != 4){
+                    //return null;
+                //}
                 if (currentLineArray[0].equals("serialNumber")){
                     continue;
                 }
@@ -190,15 +194,15 @@ public class Book {
         }
         else{
             try{
+
                 FileWriter outputFile = new FileWriter(f);
                 //write the header
                 outputFile.write("serialNumber,title,author,genre\n");
-
-                Book[] booksArray = new Book[books.size()]; 
-                booksArray = books.toArray(booksArray);
-
-                for (int l = 0; l < booksArray.length; l++){
-                    Book target = booksArray[l];
+                //Construct a List with the elements of the collection so I can use Collections.sort with my comparator
+                List<Book> booksList = new ArrayList<>(books); 
+                Collections.sort(booksList, bySerialNumber);
+                for (int l = 0; l < booksList.size(); l++){
+                    Book target = booksList.get(l);
                     String book = target.getSerialNumber() + "," + target.getTitle() + ","  + target.getAuthor() + "," + target.getGenre() + "\n";
                     outputFile.write(book);
                 }
